@@ -1,0 +1,324 @@
+why data bricks? over data factory
+types of clusters
+cluster pool
+sql warehouse
+diff btw all purpose cluster and job cluster
+types of triggers in data bricks
+what is unity catalog
+medellian architecture
+auto loader 
+data lake vs delta lake vs data warehouse
+scd types
+fact and dimension tables
+delta vs parquet
+delta table operations
+pyspark functions coding
+streaming ingestion 
+delta live tables
+work flows
+optimization techniques
+spark architecture
+predicated push down projection pruning
+
+Partitioning & Bucketing
+
+Broadcast Joins
+
+Predicate Pushdown
+
+Caching/Persisting
+
+Efficient File Formats (Parquet/ORC)
+
+Adaptive Query Execution (AQE)
+
+Handling Data Skew (Skew Joins, Salting, Skew Join Optimization) ✅
+
+1.You are working with billions of records daily. Why would you use Databricks over ADF for processing such data?
+ADF is mainly for orchestration — scheduling, monitoring, and moving data. But when we need large-scale transformations, streaming, or machine learning workloads, ADF alone isn’t efficient. Databricks, built on Spark, provides distributed compute for billions of records, real-time streaming, and advanced ML models. So, I would use ADF to orchestrate pipelines, but Databricks to do the heavy-lift transformations.
+
+
+
+2.Can you explain the difference between All-purpose clusters and Job clusters in Databricks?
+An All-purpose cluster is long-running and typically used for interactive development, notebooks, and collaboration among multiple users. It’s convenient but more expensive if kept running.
+A Job cluster is created on-demand for a specific job, runs until the job finishes, and then auto-terminates, which makes it cost-effective and more suitable for production pipelines.
+
+
+
+3.What is the Medallion Architecture in Databricks, and why is it useful?
+The Medallion Architecture organizes data into progressive quality layers.
+Bronze: Raw ingestion (landing zone, minimal transformations).
+Silver: Cleaned, conformed data with joins, deduplication, and historical tracking.
+Gold: Curated, business-level aggregates tailored for analytics, dashboards, or ML.
+This layered approach improves data quality, scalability, and reusability, and makes pipelines easier to manage.*
+
+If asked “why useful?” → emphasize quality improvements per layer and decoupling raw from business logic.
+
+
+
+4.What’s the difference between Delta Lake and Parquet?
+Parquet is a columnar storage format that’s efficient for reading and querying but is essentially static — it doesn’t support updates or deletes well.
+Delta Lake is built on top of Parquet, but it adds ACID transactions, schema evolution, time travel, and streaming support. This makes it more suitable for incremental data pipelines, data lakehouse architectures, and reliable analytics.
+
+
+
+
+5.HOW WOULD YOU IMPLEMENT SLOWLY CHANGING DIMENSION (SCD) TYPE 2 IN DATABRICKS DELTA TABLES?
+IN SCD TYPE 2, WE KEEP HISTORY BY INSERTING A NEW ROW WHENEVER A DIMENSION RECORD CHANGES, WHILE MARKING THE OLD RECORD AS EXPIRED. TYPICALLY, WE USE COLUMNS LIKE EFFECTIVE_DATE, END_DATE, OR VERSION NUMBER.
+
+IN DATABRICKS, THIS CAN BE IMPLEMENTED WITH A MERGE INTO COMMAND ON A DELTA TABLE:
+
+WHEN MATCHED AND DATA HAS CHANGED → UPDATE THE EXISTING ROW’S END_DATE.
+
+WHEN NOT MATCHED → INSERT A NEW ROW WITH THE LATEST VALUES AND A NEW VERSION/TIMESTAMP.*
+
+
+
+
+
+6.What are some optimization techniques you’ve used in Databricks to improve performance?
+Some key optimization techniques I use in Databricks include:
+Predicate Pushdown → apply filters early so less data is scanned.
+Projection Pruning → select only required columns.
+Broadcast Joins → broadcast small tables to avoid large shuffles.
+Partitioning & Bucketing → organize data for efficient reads/writes.
+Z-Order Clustering → optimize Delta Lake files for faster queries.
+Caching → cache reused DataFrames.
+OPTIMIZE & VACUUM → compact small files and clean up old snapshots.
+Tuning shuffle partitions (spark.sql.shuffle.partitions).
+Always mention real-world impact → e.g., “I used Z-Ordering on customer_id and reduced query time from minutes to seconds.”
+
+
+
+
+
+7.What is Auto Loader in Databricks, and why would you use it over a normal file load?
+Auto Loader is a feature in Databricks for incremental ingestion from cloud storage (like ADLS, S3, GCS). It automatically detects new files only, scales to handle billions of files, and supports schema inference and evolution.
+Compared to a normal file load, Auto Loader avoids reprocessing old files, reduces cost, and makes ingestion pipelines more efficient and reliable.
+Always say why better → “avoids reprocessing old files” = big plus
+
+
+
+
+
+8.Can you explain the difference between a Data Lake, Delta Lake, and Data Warehouse?
+A Data Lake stores raw data in its native format, usually schema-on-read, which makes it flexible but not reliable for complex analytics.
+A Delta Lake sits on top of a data lake and adds ACID transactions, schema enforcement & evolution, and time travel, making it reliable for both batch and streaming workloads.
+A Data Warehouse is a curated, structured environment with schema-on-write, optimized for BI and reporting, but less flexible for semi-structured or unstructured data.
+
+Tip: If they ask “which would you choose?” → say:
+Data Lake for raw/cheap storage.
+Delta Lake for processing + reliability.
+Data Warehouse for BI/analytics consumption.
+
+
+
+
+
+9.What is Unity Catalog in Databricks, and why is it important?
+Unity Catalog is a centralized data governance solution in Databricks. It provides fine-grained access control, data lineage tracking, auditing, and secure data sharing across multiple Databricks workspaces and even across clouds.
+This ensures consistency, compliance, and easier collaboration when managing data assets at scale.
+
+Tip: If asked “why important?” → highlight compliance and security (many companies want to hear this).
+
+
+
+
+
+10.Can you explain Spark architecture (driver, executors, cluster manager) in simple terms?
+In Spark architecture:
+
+Driver: The “brain” of the application. It runs on the master node, converts code into tasks, and coordinates execution.
+
+Executors: Worker processes that actually execute the tasks and return results to the driver. Each executor has its own memory and CPU.
+
+Cluster Manager: Allocates resources for the driver and executors (e.g., Databricks, YARN, Kubernetes).
+
+Together, the driver plans the work, executors perform it, and the cluster manager ensures resources are allocated.
+Tip: Keep it simple → “Driver = plans, Executors = work, Cluster Manager = resource allocator.”
+
+
+
+
+
+Q11. What is Predicate Pushdown and Projection Pruning in Spark, and why are they useful?
+Predicate Pushdown means Spark pushes filters down to the data source so only the relevant rows are read, reducing I/O.
+Projection Pruning means Spark only reads the required columns, instead of the entire dataset.
+
+Both improve performance by scanning less data, reducing memory usage, and speeding up queries*.
+
+For example, instead of reading 100 GB, Spark only scanned 5 GB after pushdown, reducing job time from 10 minutes to 2 minutes.
+
+
+
+
+
+Q12.How would you design a fault-tolerant pipeline in Databricks/ADF to handle billions of records daily?
+To design a fault-tolerant pipeline for billions of records daily in ADF + Databricks, I would:
+
+Ingestion: Use Auto Loader or partitioned copy activities with retry policies, checkpointing, and idempotent writes to handle retries without duplication.
+
+Scalability & Parallelism: Partition data by natural keys (e.g., date, region) and process in parallel across executors.
+
+Storage: Land raw data first in a Bronze layer (immutable storage) so that failed runs can be reprocessed.
+
+Processing: Use Delta Lake for ACID guarantees, schema evolution, and exactly-once writes.
+
+Resilience: Enable checkpointing in streaming, so jobs resume from the last processed offset.
+
+Monitoring & Alerting: Set up ADF alerts (failure notifications) + Databricks job monitoring dashboards.
+
+Recovery: Implement dead-letter paths for bad records, and a replay mechanism to reprocess only failed batches instead of the entire dataset.
+
+This ensures reliability, scalability, and fast recovery without data loss or duplication.
+
+Tip: The magic words interviewers look for here are:
+
+Checkpointing
+Idempotency
+Delta Lake ACID guarantees
+Dead-letter handling
+Reprocessing strategy (Bronze layer)
+
+
+
+
+
+
+You’ve covered **a very good spread of Databricks topics** already 👍 — enough to show **breadth** for a 3-year experienced data engineer.
+
+Let me break it down:
+
+### ✅ What you already covered well
+
+* **Basic concepts**: Why Databricks over ADF, types of clusters, job vs all-purpose clusters, cluster pools, SQL warehouse.
+* **Governance**: Unity Catalog.
+* **Architecture**: Medallion architecture, Delta vs Parquet, fact/dimension tables, SCDs.
+* **Optimization**: Predicate pushdown, projection pruning, broadcast joins.
+* **Delta Lake features**: ACID, schema evolution, time travel, history tracking.
+* **Ingestion**: Auto Loader, streaming ingestion, Delta Live Tables.
+* **Orchestration**: Workflows, triggers.
+* **Spark architecture**: Driver, executors, cluster manager.
+* **ADF vs Databricks**: Strengths in transformations/ML.
+
+### 🔎 Areas you can still strengthen
+
+1. **Performance tuning deep dive**
+
+   * Caching strategies, Z-Ordering, Optimize, Vacuum.
+   * When to use coalesce vs repartition.
+   * Adaptive Query Execution (AQE).
+
+2. **Streaming specifics**
+
+   * Exactly-once guarantees.
+   * Watermarking & late data handling.
+   * Difference between structured streaming & batch.
+
+3. **Real-world use cases**
+
+   * When you would pick **Databricks workflows** vs **ADF pipelines**.
+   * Example of ML integration (feature engineering, model deployment).
+
+4. **Cost optimization**
+
+   * Spot vs on-demand clusters.
+   * Cluster auto-scaling.
+
+5. **Security & compliance**
+
+   * Role-based access control with Unity Catalog.
+   * Data masking / row-level security.
+
+---
+
+👉 For **3 years of experience**, your current prep **definitely covers the 70–80% of questions you’ll get**.
+If you add the above **performance + streaming + cost/security** points, you’ll be in the **top tier** of candidates.
+
+Do you want me to build you a **30-question mock panel (mix of theory + scenario-based)** just for Databricks so you can see where you stand?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Additional Databricks Topics You Haven’t Fully Covered
+
+Delta Lake Advanced Features
+
+What is Z-ORDER and when to use it?
+
+How does OPTIMIZE work in Delta Lake?
+
+Difference between VACUUM and OPTIMIZE.
+
+How to handle small file problem in Delta tables.
+
+Partitioning & Bucketing
+
+Best practices for partitioning Delta tables.
+
+Difference between partitioning and bucketing in Spark/Delta.
+
+Pitfalls of over-partitioning.
+
+Structured Streaming Advanced
+
+How watermarking works (late data).
+
+Exactly-once semantics — how Databricks guarantees it.
+
+Checkpointing & recovery in streaming jobs.
+
+Performance Optimization
+
+Difference between cache, persist, and checkpoint.
+
+When to use broadcast join vs shuffle join.
+
+Coalesce vs Repartition.
+
+Adaptive Query Execution (AQE).
+
+Cost & Resource Management
+
+How autoscaling clusters work.
+
+Spot vs On-demand instances in Databricks.
+
+Cluster Pools (you mentioned, but could go deeper: how they reduce spin-up time & cost).
+
+Security & Governance
+
+How Unity Catalog enforces row-level and column-level security.
+
+How to do data masking or PII protection in Databricks.
+
+Multi-cloud sharing with Unity Catalog.
+
+Databricks SQL
+
+When would you use SQL Warehouse over a cluster?
+
+How does Materialized View differ from a normal Delta table?
+
+Integration with ML & BI
+
+How Databricks integrates with MLflow for model tracking.
+
+How Databricks connects to Power BI / Tableau.
+
+Feature Store in Databricks.

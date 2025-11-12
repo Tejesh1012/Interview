@@ -1,0 +1,124 @@
+select employee_id, name, dept from emp e
+where sal > (select avg(salary) from emp e1 where e1.dept_id = e.dept_id)
+
+
+
+Here is a **cleaned, structured, interview-ready explanation** of your ADF incremental ingestion logic. I rewrote it so it reads clearly, shows the architecture, and highlights why each component is used.
+
+---
+
+# ✅ **ADF Incremental Load Architecture — Clean Explanation**
+
+### **1. Config Table (Control Table)**
+
+This table drives the entire ingestion pipeline.
+It contains:
+
+* **ID**
+* **Source**
+* **Table name**
+* **Query / SELECT Statement**
+* **Delta / Full load flag**
+* **IsActive**
+* **Watermark (last successful load timestamp)**
+
+This helps make the pipeline **dynamic** — no hard-coding.
+
+---
+
+# ✅ **2. Until Activity — Waiting for Source System**
+
+The pipeline starts with an **Until Activity** that keeps checking whether the source system has completed its load.
+
+### **Logic:**
+
+* A **Lookup activity** reads the **ready_flag** from the control table.
+* If `ready_flag = 0`, the pipeline:
+
+  * waits for **5 minutes**
+  * checks again
+* This loop continues every **15 minutes** (or whatever interval you set).
+* If the flag does not become **1 within 3.5 hours**, the pipeline **fails automatically**.
+
+### ✅ Purpose:
+
+This ensures your pipeline starts **only after the source data load is completed**, preventing partial or inconsistent ingestion.
+
+---
+
+# ✅ **3. When ready_flag = 1 → Begin Ingestion**
+
+Once the source system signals completion:
+
+### **Lookup Activity**
+
+Fetches configuration:
+
+* List of tables to ingest
+* Whether the table is full/delta
+* Watermark for delta loads
+* SQL query to execute
+
+---
+
+# ✅ **4. Set Variable — Capture Current Pipeline Run Time**
+
+You store the **current pipeline start time** in a variable.
+This timestamp will later be used to **update the watermark** after ingestion completes.
+
+---
+
+# ✅ **5. ForEach Activity — Loop Through Each Table**
+
+The Foreach iterates through each table returned by the config table.
+
+Inside ForEach:
+
+### ✅ **Copy Activity**
+
+* If **Full Load** → `SELECT *`
+* If **Delta Load** →
+  `SELECT * FROM table WHERE modified_date > watermark`
+
+The data is copied to the **Raw container** in your Data Lake, with the required format (Parquet/CSV/Delta).
+
+---
+
+# ✅ **6. Stored Procedure to Update Watermark**
+
+After the Copy is successful:
+
+* A **Stored Procedure** updates:
+
+  * `pipeline.triggertime` = variable containing pipeline start time
+  * This becomes the **new watermark** for the next load.
+
+This ensures you only bring **incremental data next time**.
+
+---
+
+# ✅ **7. Email Alerts**
+
+Failure notifications are sent automatically for:
+
+* Until activity timeout
+* Copy failures
+* Pipeline failures
+
+This ensures monitoring and quick action when ingestion stops.
+
+---
+
+# ✅ **Summary (Interview Ready)**
+
+“First, our ADF pipeline waits for the source team to complete their load. We use an Until activity that checks the ready flag every few minutes, up to 3.5 hours. When the flag becomes 1, we pull table metadata from our config table, set the current run’s timestamp as the new watermark, and iterate through each table. A Copy activity ingests either full or delta data based on configuration. After ingestion, a stored procedure updates the watermark. Failures automatically trigger email alerts. This makes the pipeline fully dynamic, controlled, and dependable.”
+
+---
+
+If you want, I can also create:
+
+✅ A pipeline diagram
+✅ A short 30-second explanation for interviews
+✅ A full architecture diagram (PNG using image generation)
+
+Just tell me!

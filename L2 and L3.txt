@@ -1,0 +1,213 @@
+Great! Below are **simple, confident, and hands-on answers** to these **L2-level Data Engineering questions** that show you're technically sound and practically experienced — perfect for impressing TGS interviewers in the L2 round:
+
+---
+
+### ✅ **1. Glue Job – Schema Evolution**
+
+**Q:** *“In your Glue job written in PySpark, how did you handle schema evolution if a new column was added in the S3 CSV file?”*
+
+**Answer:**
+
+> “I used `.option("inferSchema", "true")` while reading the file in PySpark.
+> Also, I enabled **‘schema evolution’ in Glue job settings** and **used Hudi** for versioned writes.
+> This helped Glue automatically detect and adjust when new columns were added — without breaking the pipeline.”
+
+---
+
+### ✅ **2. Partitioning in Parquet**
+
+**Q:** *“How did you choose the partition key, and what happens if partitioning is not optimal?”*
+
+**Answer:**
+
+> “I used high-cardinality fields like `load_date` or `region_id` to partition, depending on query patterns.
+> If partitioning is not optimal, queries can become slow because Athena or Glue has to scan too many small files or read unnecessary partitions.
+> So, we balance between too many and too few partitions — keeping partition size around 128–256 MB.”
+
+---
+
+### ✅ **3. Data Deduplication in ETL**
+
+**Q:** *“How did you ensure no duplicate records were written to the fact table?”*
+
+**Answer:**
+
+> “I used the **Hudi upsert feature** and specified a **primary key column** like `transaction_id`.
+> In PySpark, I also used `dropDuplicates()` before writing.
+> And in some cases, I used **window functions** to keep the latest record based on `last_updated_date`.”
+
+---
+
+### ✅ **4. Redshift COPY Best Practices**
+
+**Q:** *“What are the best practices you followed while using COPY command from S3 to Redshift?”*
+
+**Answer:**
+
+> “I followed these best practices:
+>
+> * Compressed files in **Parquet or GZIP**
+> * Enabled `COMPUPDATE OFF` and `STATUPDATE OFF` for faster loads
+> * Loaded data into **staging tables** first, then moved to fact tables after deduplication
+> * Used IAM roles with limited S3 access and **manifest files** for atomic loads.”
+
+---
+
+### ✅ **5. Athena Optimization**
+
+**Q:** *“How did you optimize performance and reduce costs when querying large data in Athena?”*
+
+**Answer:**
+
+> “I used **Parquet format** with **partitioned folders** (like year/month/day) to reduce scanned data.
+> I always **used `SELECT only needed columns`** instead of `SELECT *`.
+> Also, I created **Glue crawlers** to keep metadata updated and **used CTAS (Create Table As Select)** queries for temp aggregations.”
+
+---
+
+Let me know if you want a **mock Q\&A printable sheet** for this — or I can combine L2 + L3 together for your interview prep PDF.
+
+
+Absolutely! Here’s how you can answer each of these L3-level architecture + ownership questions **in a confident, simple, and manager-friendly way** that shows clarity, hands-on experience, and ownership.
+
+---
+
+### ✅ **1. Incremental Load Strategy**
+
+**Q:** *“Explain your approach for building an incremental load pipeline in Glue — how did you track new vs old data?”*
+
+**Answer:**
+
+> “I used a `last_modified_date` column to filter only the new or changed records during each run.
+> In Glue, I passed this date as a parameter and applied it as a filter in my PySpark job.
+> After processing, I updated a watermark table or checkpoint file in S3 to store the latest timestamp. This helped make the pipeline incremental, reliable, and faster compared to full loads.”
+
+---
+
+### ✅ **2. Error Handling in Glue Jobs**
+
+**Q:** *“If your Glue job fails halfway during transformation, how do you recover from that? What retry or alerting mechanisms do you put in place?”*
+
+**Answer:**
+
+> “I build my jobs to be **idempotent**, so if they fail, I can re-run them without duplicate data.
+> For retry, I use Glue job parameters and CloudWatch alarms.
+> If the job fails, it triggers an **SNS alert to email/Slack**.
+> I also log each stage (read, transform, write), so I can pinpoint the failure easily.”
+
+---
+
+### ✅ **3. Redshift Model Design**
+
+**Q:** *“How did you model your Redshift tables — did you use star schema or snowflake schema? And why?”*
+
+**Answer:**
+
+> “I used the **star schema** mostly, because it’s simple and faster for analytics.
+> We created one fact table for transactions and linked it to dimension tables like customers, products, and regions using surrogate keys.
+> This reduced joins, improved performance, and made it easier for BI teams to build dashboards.”
+
+---
+
+### ✅ **4. Security & Access Control**
+
+**Q:** *“How do you manage access to the Glue catalog and S3 buckets containing raw and transformed data?”*
+
+**Answer:**
+
+> “We use **IAM roles with fine-grained permissions**.
+> For example, the Glue job has a role that can only read from the raw S3 bucket and write to the processed bucket.
+> Access to Glue Data Catalog is controlled via **Lake Formation policies**, so only authorized users can query or modify metadata.”
+
+---
+
+### ✅ **5. Cost Optimization Strategy**
+
+**Q:** *“You’re running ETL daily. What are the most effective ways to keep Glue and Redshift usage cost-efficient?”*
+
+**Answer:**
+
+> “I optimized cost in a few ways:
+> • Enabled **Glue job bookmarking** for incremental loads
+> • Tuned **Spark partitions** to avoid over-provisioning
+> • Used **Parquet format** for smaller, faster reads
+> • In Redshift, I compressed data using **encodings** and scheduled **VACUUM & ANALYZE** jobs
+> • Finally, monitored usage with **CloudWatch & Cost Explorer** to catch any anomalies.”
+
+---
+
+Let me know if you want these as a printable sheet or if you want mock answers for specific services like EMR, Lake Formation, or Athena too.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+string op
+
+loops
+for if while
+ssorting the list
+minimal elements
+larger elements
+operations
+manipulation of files, how will you write create
+dictionrues, sort the dict 
+
+if the string has list and numbers how you handle it
+
+
+Q1. what is the new name of Delta Live tables (DLT) 
+A1. Lakeflow Declarative Pipelines
+
+Q2. how to ingest the data in Databricks from different sources?
+A2. Lakeflow connect
+
+Q3. if I created 3 different workspaces in same region, how many associated metastores will be there.
+A3. Only one metastore, which will be shared among all workspaces.
+
+Q4. when I create a new workspace in a region where we previously created more workspaces, will a new metastore be created
+A4. No, it will use the existing metastore earlier created for the same region.
+
+Q5. For managed table whats the recommended level of storage, metastore level or catalog level or schema level.
+A5. Databricks recommend us to keep the storage at the catalog level.
+
+Q6. what kind of tables Databricks recommend us to use, and why?
+A6. Managed tables, as we get a lot of optimizations under the hood.
+
+Q7. what will happen when we drop a managed table in databricks with unity catalog enabled.
+A7. We can do a UNDROP till 7 days. After that data is marked for deletion.
+
+Q8. In what cases you might create a external table in databricks.
+Q8. cases where external systems are not compatible with databricks
+
+Q9. for a managed table, if while creating a schema you mentioned external location, then what will happen?
+A9. then the path mentioned at schema level takes precedence. and data will be stored at that location.
+
+Q10. what are the different formats supported for a managed table.
+A10. Delta & Iceberg
+
+Q11. what is lakeflow connect?
+A11. lakeflow connect is the ingestion tool of databricks to ingest data from various data sources 
+
+Q12. Lets say you are using a azure free trial for 30 days. Generally there are a lot of limitations while using trial. How to overcome that during your free trial.
+A12. within your 30 days of trial, you can upgrade your account. But still It will first consume those free credits during the period of those 30 days and then only will charge you. This way you get full fledged features.
+
+Q13. In Databricks free edition, what things you wont be able to practise?
+A13.  Only serverless compute is available, you cant have a dedicated instance running. Also what if you have a scenario where your data is stored in your azure cloud account and you want to create a table. I guess in free edition you cant do it.
+
+Q14. What is the role of Managed resource group while creating Databricks workspace.
+A14. This resource group holds the resources which databricks creates in backend for example your VM's, your data etc.
+
+Q15. In what cases you would wish to go with serverless compute in Databricks.
+A15. quick prototyping, adhoc analysis.

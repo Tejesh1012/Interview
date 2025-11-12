@@ -1,0 +1,32 @@
+It’s a retailer-based project, and I’m part of the data lake team. We have multiple Data Factories, but one central Data Factory handles the entire ingestion layer, where data is pulled from various source systems into the raw container of the data lake.
+
+This raw data is then used by other Data Factories along with the mapping files we receive from stakeholders. We first use Copy activities to bring those mapping files into the raw layer.
+
+For processing, we use Databricks notebooks.
+
+The Bronze notebook reads data from the raw container.
+
+The Silver notebook performs enrichment — like deduplication, null handling with default values, data quality checks, and overall cleaning.
+
+The Gold notebook applies business logic, joins, and aggregations to create fact and dimension tables.
+
+Finally, dashboards are built on top of the Gold layer for reporting and analytics
+
+
+
+For the ingestion layer, we pull data from multiple source systems into the raw container using Azure Data Factory.
+
+We start with an Until activity which checks whether the source team has completed their data load. This is controlled using a ready_flag in a control table.
+
+If ready_flag = 0, the data is not ready, so the Until activity keeps looping.
+
+Inside the loop, we have a Lookup activity + Wait activity. It checks the flag every 1 minute for up to 3.5 hours.
+
+If the flag stays 0 even after 3.5 hours, the pipeline fails with a timeout.
+
+Once the ready_flag = 1, the load can proceed.
+The next Lookup activity reads the config table, which contains all the metadata like table names, queries, full/delta indicator, and watermark.
+
+Then we use a ForEach activity to iterate through each table and ingest it into the raw layer. For delta loads, we only pull records greater than the previous watermark. After each load, we call a Stored Procedure that updates the watermark using the current pipeline trigger time.
+
+This makes the ingestion layer fully dynamic and controlled using metadata

@@ -1,0 +1,44 @@
+import pandas as pd
+import glob
+
+
+path = '\'
+
+df_list = [pd.read_csv(file) for file in glob.glob(path)]
+
+merged_df = pd.concat(df_list, ignore_index = True, sort= False)
+
+merged_df.to_csv("merged_output.csv.gz", index = False, compression = 'gzip')
+
+
+
+
+date	product	sales
+1/1/2025	A	10
+1/3/2025	A	30
+
+
+df = pd.dataframe(data)
+df['date'] = pd.to_datetime(df['date'])
+
+full_dates = pd.date_range(start=df['date'].min(), end=df['date'].max())
+
+df = df.set_index('date').reindex(full_dates)
+
+df['product'] = df['product']/ffill()
+
+df['sales'] = df['sales'].fillna(0)
+
+df = df.reset_index().rename(columns=('index
+
+
+select dep_id, max(salary) as max_salary
+from employees
+group by dep_id;
+
+
+select emp_id, dep_id, salary
+
+from ( select *, rank() over (partition By dep_id order by salary desc) as rank
+from employees) ranked 
+where rank = 1;

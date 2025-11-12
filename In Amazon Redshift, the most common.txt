@@ -1,0 +1,84 @@
+In **Amazon Redshift**, the most commonly used and recommended **distribution style** is:
+
+---
+
+### ✅ **AUTO Distribution Style (used most often in modern Redshift)**
+
+---
+
+### 🔹 Here's the Priority Order of Common Use (Real-World):
+
+| Distribution Style      | Usage Frequency                | When It's Used                                                                                  |
+| ----------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------- |
+| 🔶 **AUTO** (most used) | ✅ **Most Common**              | Redshift automatically chooses the best style (KEY, ALL, or EVEN) based on table size & queries |
+| 🔑 **KEY**              | 🟡 Used selectively            | When large fact tables are frequently joined with a dimension table on a specific column        |
+| ⚖️ **EVEN**             | 🟡 Used when no clear join key | For large tables where no frequent joins exist                                                  |
+| 📋 **ALL**              | 🔴 Rarely used                 | For small dimension tables that are joined frequently                                           |
+
+---
+
+### 🔍 Why **AUTO** is Most Used (Especially in Newer Clusters)
+
+* Automatically chooses the most efficient style for performance.
+* Keeps your maintenance low — Redshift monitors and adjusts as table size grows.
+* Available in **Redshift RA3 nodes** (recommended by AWS).
+* Great for **new projects or when unsure** about which style to use.
+
+> 📌 **Important**: If you don’t explicitly set a distribution style, Redshift **defaults to AUTO** in newer versions.
+
+---
+
+### 🛠️ Example Use Cases
+
+| Table             | Recommended Style          | Why                                          |
+| ----------------- | -------------------------- | -------------------------------------------- |
+| `sales_fact`      | `KEY(region_id)` or `AUTO` | Large table frequently joined with region    |
+| `countries_dim`   | `ALL`                      | Small dimension table joined in many queries |
+| `logs` (no joins) | `EVEN`                     | Just stored for analytics, no joins          |
+
+---
+
+### 💡 Summary
+
+| Style       | When to Use                                                     |
+| ----------- | --------------------------------------------------------------- |
+| ✅ **AUTO**  | Default & most used — Redshift picks best based on size & usage |
+| 🔑 **KEY**  | When joining large tables on same column (e.g., `customer_id`)  |
+| ⚖️ **EVEN** | For large tables with no joins                                  |
+| 📋 **ALL**  | For very small, frequently joined lookup tables                 |
+
+---
+
+Let me know if you want help deciding **distribution + sort key** for your specific tables!
+
+
+
+
+| Data Type         | Meaning                                 | Example                                    |
+| ----------------- | --------------------------------------- | ------------------------------------------ |
+| 🔥 **Hot Data**   | Frequently accessed or recently updated | Today's transactions, real-time dashboards |
+| 🌤️ **Warm Data** | Occasionally accessed                   | Last week's sales, recent logs             |
+| ❄️ **Cold Data**  | Rarely accessed, but stored long-term   | Last year's logs, archived reports         |
+
+
+
+
+
+CREATE EXTERNAL SCHEMA glue_schema
+FROM DATA CATALOG
+DATABASE 'your_glue_db_name'
+IAM_ROLE 'arn:aws:iam::123456789012:role/your-redshift-role'
+REGION 'us-east-1';
+
+
+SELECT * FROM glue_schema.your_external_table;
+
+
+And Redshift will:
+
+Use Redshift Spectrum to query the data directly from S3
+
+Read schema from Glue
+
+Use IAM role to get permission
+

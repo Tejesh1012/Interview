@@ -1,0 +1,160 @@
+Perfect 👍 These are **exactly the kind of scenario-based questions** you’ll get in a 3+ years Data Engineering interview.
+I’ll give you **clear, simple, and easily understandable answers** so you can revise fast and explain them in interviews without confusion.
+
+---
+
+### **Q1). How do you optimize an ADF copy activity while moving billions of rows from SQL to ADLS Gen2?**
+
+✅ Use:
+
+* **Partitioning** → Split data on high-cardinality column (like `date`, `id`) → multiple parallel copies.
+* **Polybase / Bulk Copy** → Faster bulk load from SQL.
+* **Staging** → Use staging blob before final storage.
+* **Parallelism settings** → Increase **DIUs** in copy activity.
+* **Watermark + Until activity** → Incremental load in smaller batches instead of full load.
+
+---
+
+### **Q2). Difference between Delta Lake and Parquet. When choose Delta?**
+
+* **Parquet** → columnar storage, efficient for read/write, but **static** (no updates/deletes).
+* **Delta Lake** → built on Parquet + adds
+
+  * ACID transactions
+  * Time travel
+  * Schema evolution
+  * Upserts (MERGE)
+
+👉 Choose **Delta Lake** when:
+
+* You need **updates/deletes** (SCD, GDPR deletes).
+* You need **time travel** or **schema evolution**.
+* You want **stream + batch unification**.
+
+---
+
+### **Q3). How do you handle schema drift in ADF pipelines with dynamic datasets?**
+
+* In **datasets** → set schema as **None** (don’t enforce).
+* In **Mapping Data Flow** → enable **Allow Schema Drift**.
+* Use **dynamic column mapping** (by name or ordinal).
+* Store metadata (column names, types) in **config tables**.
+
+---
+
+### **Q4). Explain Delta Lake time travel with example.**
+
+Delta keeps **versions** of data in `_delta_log`.
+
+* Example:
+
+  * v1 → Initial load 10M rows
+  * v2 → Added 2M rows
+  * v3 → Deleted 100K rows
+
+👉 You can query historical data:
+
+```sql
+SELECT * FROM sales VERSION AS OF 1
+-- or
+SELECT * FROM sales TIMESTAMP AS OF '2025-09-20'
+```
+
+✅ Use case: Debugging wrong loads, restoring accidentally deleted data, auditing.
+
+---
+
+### **Q5). What are the different integration runtime types in ADF?**
+
+* **Azure IR** → Default, used for cloud data movement.
+* **Self-hosted IR** → Used for on-prem SQL, file servers, private networks.
+* **Azure SSIS IR** → Run legacy SSIS packages in ADF.
+
+---
+
+### **Q6). How do you optimize a Databricks notebook on large datasets?**
+
+* Use **OPTIMIZE + ZORDER** on Delta tables.
+* Apply **partitioning** + **filter pushdown**.
+* Use **Broadcast joins** for small lookup tables.
+* Cache/persist intermediate data **only if reused**.
+* Tune cluster (Autoscaling, right node size).
+* Use **vectorized UDFs / built-in functions** instead of Python loops.
+
+---
+
+### **Q7). Difference between CACHE, PERSIST, and DELTA CACHE?**
+
+* **CACHE** → Keeps DataFrame in **memory**., to store an rdd or dataframe in memory(ram) only 
+* **PERSIST** → Similar, but you choose **storage level** (e.g., memory + disk)., gives you more control over how your rdd and dataframe is stored.
+* **DELTA CACHE** → Databricks-specific → caches **files on SSD of nodes** for faster IO (best for repeated queries on Delta).
+
+👉 Use:
+
+* `CACHE`/`PERSIST` → when reusing a DataFrame in same job.
+* `DELTA CACHE` → for BI queries on hot tables.
+
+---
+
+### **Q8). Handling schema drift in ADF mapping data flows (JSON/Parquet)?**
+
+* Enable **Allow schema drift**.
+* Use **Wildcard column patterns** (`column*`).
+* Apply **derived columns** to map dynamically.
+* Store schema in a **config-driven metadata table** for automation.
+
+---
+
+### **Q9). Incremental load from ADLS → Delta with SCD Type 2?**
+
+Steps:
+
+1. **Read source data incrementally** (via watermark column like `last_updated`).
+2. **Read target Delta table**.
+3. Use **MERGE INTO** with conditions:
+
+   * If `id` exists & changed → update `end_date` (expire old record), insert new row.
+   * If `id` new → insert new row.
+4. Store version history in Delta → Type 2 maintained.
+
+---
+
+### **Q10). How Delta Lake ensures ACID & concurrent writes?**
+
+* **Atomicity** → Either whole transaction commits or none.
+* **Consistency** → Table always in valid state.
+* **Isolation** → Snapshot isolation, readers don’t see partial writes.
+* **Durability** → Once committed in `_delta_log`, it’s permanent.
+
+👉 Delta uses **transaction logs (`_delta_log`)** with JSON + Parquet to manage concurrent writes.
+
+---
+
+⚡ These are **short + clear answers** you can expand in interviews if asked deeper.
+
+Would you like me to also create a **one-page cheat sheet** (tabular format) for these 10 questions so you can revise quickly before your interview?
+
+
+
+2025 Data Engineer Interview Questions for Netflix (Big Data + Spark Focus) 
+
+1. How do you manage schema evolution in Delta Lake across hundreds of partitions?
+2. Explain how Netflix could leverage structured streaming for real-time recommendations.
+3. What’s the benefit of using Z-Ordering in Delta Lake for search-heavy workloads?
+4. Compare merge-on-read vs copy-on-write table formats.
+5. How would you backfill historical data without interrupting live pipelines?
+6. How do you partition and optimize data for querying in large-scale Parquet datasets?
+7. Describe your approach to debugging a Spark job that runs indefinitely.
+8. How do you design idempotent jobs in Spark to prevent duplication?
+9. What strategies do you use to detect data quality issues in petabyte-scale tables?
+10. Explain checkpointing and watermarking in structured streaming.
+11. How do you scale a Spark job across a multi-region deployment?
+12. What are common memory bottlenecks in Spark and how do you mitigate them?
+13. How do you manage job dependencies in a complex DAG using orchestration tools?
+14. Describe a time when you had to reprocess terabytes of corrupted data.
+15. How does data skew affect joins and what strategies fix it?
+16. What’s the purpose of using Delta Live Tables in production environments?
+17. How would you debug performance issues in a nightly batch Spark pipeline?
+18. What metrics do you track to monitor pipeline health at scale?
+19. How would you reduce storage costs in S3-based data lakes?
+20. Walk through designing a Netflix-like viewership analytics pipeline.
